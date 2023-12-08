@@ -5,11 +5,31 @@ const parseInput = (rawInput: string) => rawInput
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput)
   const sections = input.split("\n\n")
-  const seeds = sections.shift()?.split(":")[1].trim().split(" ").map(n => +n) ?? []
+  const seeds =
+    sections
+      .shift()
+      ?.split(":")[1]
+      .trim()
+      .split(" ")
+      .map((n) => +n) ?? []
   console.log(seeds)
-  const mappings = sections.map(s => 
-     s.split(":\n")[1].split("\n").map(mappingline => mappingline.trim().split(" ").map(n => +n)).map(mappingline => {
-      return {destStart: mappingline[0], srcStart: mappingline[1], rangeLen: mappingline[2]}})
+  const mappings = sections.map((s) =>
+    s
+      .split(":\n")[1]
+      .split("\n")
+      .map((mappingline) =>
+        mappingline
+          .trim()
+          .split(" ")
+          .map((n) => +n),
+      )
+      .map((mappingline) => {
+        return {
+          destStart: mappingline[0],
+          srcStart: mappingline[1],
+          rangeLen: mappingline[2],
+        }
+      }),
   )
   const locations = []
   for (let x of seeds) {
@@ -17,7 +37,7 @@ const part1 = (rawInput: string) => {
       for (let ml of mapping) {
         if (x >= ml.srcStart && x - ml.srcStart <= ml.rangeLen) {
           x = ml.destStart + (x - ml.srcStart)
-          break;
+          break
         }
       }
     }
@@ -30,32 +50,59 @@ const part1 = (rawInput: string) => {
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput)
   const sections = input.split("\n\n")
-  const _seeds = sections.shift()?.split(":")[1].trim().split(" ").map(n => +n) ?? []
+  const _seeds =
+    sections
+      .shift()
+      ?.split(":")[1]
+      .trim()
+      .split(" ")
+      .map((n) => +n) ?? []
   const seeds = []
   for (let i = 0; i < _seeds.length; i += 2) {
-    for (let j = 0; j < _seeds[i+1]; j++) {
-      seeds.push(_seeds[i] + j)
-    }
+    seeds.push({ start: _seeds[i], rangeLen: _seeds[i + 1] - 1 })
   }
-  console.log(seeds)
-  const mappings = sections.map(s => 
-     s.split(":\n")[1].split("\n").map(mappingline => mappingline.trim().split(" ").map(n => +n)).map(mappingline => {
-      return {destStart: mappingline[0], srcStart: mappingline[1], rangeLen: mappingline[2]}})
+  const mappings = sections.map((s) =>
+    s
+      .split(":\n")[1]
+      .split("\n")
+      .map((mappingline) =>
+        mappingline
+          .trim()
+          .split(" ")
+          .map((n) => +n),
+      )
+      .map((mappingline) => {
+        return {
+          destStart: mappingline[0],
+          srcStart: mappingline[1],
+          rangeLen: mappingline[2] - 1,
+        }
+      }),
   )
+  console.log(seeds)
   const locations = []
-  for (let x of seeds) {
-    for (let mapping of mappings) {
+  for (let mapping of mappings) {
+    console.log(mapping)
+    for (let x of seeds) {
       for (let ml of mapping) {
-        if (x >= ml.srcStart && x - ml.srcStart <= ml.rangeLen) {
-          x = ml.destStart + (x - ml.srcStart)
-          break;
+        if (x.start >= ml.srcStart && x.start - ml.srcStart < ml.rangeLen) {
+          if (x.start + x.rangeLen > ml.srcStart + ml.rangeLen) {
+            seeds.push({
+              start: ml.srcStart + ml.rangeLen + 1,
+              rangeLen: x.start + x.rangeLen - (ml.srcStart + ml.rangeLen) - 1,
+            })
+            x.rangeLen = ml.srcStart + ml.rangeLen - x.start
+          }
+          x.start = ml.destStart + (x.start - ml.srcStart)
+
+          break
         }
       }
     }
-    locations.push(x)
+    console.log(seeds)
   }
-  console.log(locations)
-  return Math.min(...locations)
+  // console.log(locations)
+  return Math.min(...seeds.map((s) => s.start))
 }
 
 run({
